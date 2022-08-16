@@ -4,7 +4,7 @@ DiffPriv is a differential privacy framework for real time data streaming writte
 
 This project is the result of my master thesis: Differential privacy in large scale data streaming.
 It has been developer during an intership at [STRM Privacy](https://strmprivacy.io/)
-## How to run
+## How to use
 it's recommended to first build the application using as it will significantly speed up the algorithm
 > cargo build --release
 
@@ -27,7 +27,7 @@ Additional parameters can be easily added through the `config.rs` file by adding
 ## Implementing `Anonymizable` trait to anonymize new data
 By implementing the `Anonymizable` trait on any type of datastructure, DiffPriv will know how to anonymize it.
 The following QIs types are implemented
-```
+```rust
 /// value, min_value, max_value, weight of attribute
 pub type IntervalType = (
 QuasiIdentifierType,
@@ -192,6 +192,9 @@ impl Anonymizable for Adult {
 ## Architecture
 The architecture of the DiffPriv framework can be seen below
 ![Alt text](midipsa_1.png?raw=true "Title")
+
+## Thesis related stuff in the repo
+In my thesis is described tests using `knn-test.sh`. To run this you need Java 8.
 
 License:
 

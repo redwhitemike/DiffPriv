@@ -27,7 +27,7 @@ Additional parameters can be easily added through the `config.rs` file by adding
 ## Implementing `Anonymizable` trait to anonymize new data
 By implementing the `Anonymizable` trait on any type of datastructure, DiffPriv will know how to anonymize it.
 The following QIs types are implemented
-```
+```rust
 /// value, min_value, max_value, weight of attribute
 pub type IntervalType = (
 QuasiIdentifierType,
@@ -50,6 +50,9 @@ An example implementation can be seen below
 ## Architecture
 The architecture of the DiffPriv framework can be seen below
 ![Alt text](midipsa_1.png?raw=true "Title")
+
+## Thesis related stuff in the repo
+In my thesis is described tests using `knn-test.sh`. To run this you need Java 8.
 
 License:
 
