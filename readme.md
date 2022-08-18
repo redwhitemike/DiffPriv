@@ -1,3 +1,4 @@
+![Crates.io](https://img.shields.io/crates/v/diff_priv)
 # DiffPriv
 DiffPriv is a differential privacy framework for real time data streaming written in Rust. Supporting k-anonymity,
 (c,l)-diversity and ε-differential privacy. The framework is based on the [Preserving Differential Privacy and Utility of Non-stationary Data Streams](https://ieeexplore.ieee.org/document/8637412) paper, with various improvements implemented.
