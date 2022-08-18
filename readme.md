@@ -8,9 +8,12 @@ It has been developer during an internship at [STRM Privacy](https://strmprivacy
 ## How to use
 it's recommended to first build the application using as it will significantly speed up the algorithm
 > cargo build --release
+
 An application.conf needs to be present in the root folder.
-this will build a binary that can be run with the following command
+This will build a binary that can be run with the following command
+
 > RUST_LOG="debug" ./target/release/diff-priv
+
 This will use a dataset from the `datasets` folder, the supported datasets can be seen in `test/tests.rs`
 `RUST_LOG` part can be removed to the users liking. This removes debugging logging when the algorithm will run.
 
