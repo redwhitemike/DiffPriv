@@ -3,16 +3,14 @@ DiffPriv is a differential privacy framework for real time data streaming writte
 (c,l)-diversity and ε-differential privacy. The framework is based on the [Preserving Differential Privacy and Utility of Non-stationary Data Streams](https://ieeexplore.ieee.org/document/8637412) paper, with various improvements implemented.
 
 This project is the result of my master thesis: Differential privacy in large scale data streaming.
-It has been developer during an intership at [STRM Privacy](https://strmprivacy.io/)
+It has been developer during an internship at [STRM Privacy](https://strmprivacy.io/)
+
 ## How to use
 it's recommended to first build the application using as it will significantly speed up the algorithm
 > cargo build --release
-
 An application.conf needs to be present in the root folder.
 this will build a binary that can be run with the following command
-
 > RUST_LOG="debug" ./target/release/diff-priv
-
 This will use a dataset from the `datasets` folder, the supported datasets can be seen in `test/tests.rs`
 `RUST_LOG` part can be removed to the users liking. This removes debugging logging when the algorithm will run.
 
@@ -24,34 +22,15 @@ Inside the `application.conf` all the different privacy parameters can be edited
 At this moment for `buffer_size` we use `3*k` and for `k_max` we use `4*k`. This can be edited in the `environment.rs` and `tests.rs` file.
 Additional parameters can be easily added through the `config.rs` file by adding it as a struct attribute and then adding it to `application.conf`.
 
-## Implementing `Anonymizable` trait to anonymize new data
-By implementing the `Anonymizable` trait on any type of datastructure, DiffPriv will know how to anonymize it.
-The following QIs types are implemented
-```rust
-/// value, min_value, max_value, weight of attribute
-pub type IntervalType = (
-QuasiIdentifierType,
-QuasiIdentifierType,
-QuasiIdentifierType,
-usize,
-);
-
-/// rank, max_rank, weight of attribute
-pub type OrdinalType = (i32, i32, usize);
-
-/// value, max value, weight of attribute
-pub type NominalType = (i32, i32, usize);
-```
-An example implementation can be seen below
-
+# Documentation
 {{readme}}
 
 
-## Architecture
+# Architecture
 The architecture of the DiffPriv framework can be seen below
 ![Alt text](midipsa_1.png?raw=true "Title")
 
-## Thesis related stuff in the repo
+# Thesis related stuff in the repo
 In my thesis is described tests using `knn-test.sh`. To run this you need Java 8.
 
 License:

@@ -1,3 +1,3 @@
-mod categorical_noiser;
+pub mod categorical_noiser;
 pub mod laplace_noiser;
-mod numerical_noiser;
+pub mod numerical_noiser;

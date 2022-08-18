@@ -3,16 +3,14 @@ DiffPriv is a differential privacy framework for real time data streaming writte
 (c,l)-diversity and ε-differential privacy. The framework is based on the [Preserving Differential Privacy and Utility of Non-stationary Data Streams](https://ieeexplore.ieee.org/document/8637412) paper, with various improvements implemented.
 
 This project is the result of my master thesis: Differential privacy in large scale data streaming.
-It has been developer during an intership at [STRM Privacy](https://strmprivacy.io/)
+It has been developer during an internship at [STRM Privacy](https://strmprivacy.io/)
+
 ## How to use
 it's recommended to first build the application using as it will significantly speed up the algorithm
 > cargo build --release
-
 An application.conf needs to be present in the root folder.
 this will build a binary that can be run with the following command
-
 > RUST_LOG="debug" ./target/release/diff-priv
-
 This will use a dataset from the `datasets` folder, the supported datasets can be seen in `test/tests.rs`
 `RUST_LOG` part can be removed to the users liking. This removes debugging logging when the algorithm will run.
 
@@ -24,16 +22,64 @@ Inside the `application.conf` all the different privacy parameters can be edited
 At this moment for `buffer_size` we use `3*k` and for `k_max` we use `4*k`. This can be edited in the `environment.rs` and `tests.rs` file.
 Additional parameters can be easily added through the `config.rs` file by adding it as a struct attribute and then adding it to `application.conf`.
 
-## Implementing `Anonymizable` trait to anonymize new data
+# Documentation
+## DiffPriv
+DiffPriv is a differential privacy framework for real time data streaming written in Rust. Supporting k-anonymity,
+(c,l)-diversity and ε-differential privacy. The framework is based on the [Preserving Differential Privacy and Utility of Non-stationary Data Streams](https://ieeexplore.ieee.org/document/8637412) paper, with various improvements implemented.
+
+This library is the result of my master thesis: Differential privacy in large scale data streaming.
+It has been developer during an internship at [STRM Privacy](https://strmprivacy.io/)
+
+## Using the anonymizer
+An example of using the anonymizer can be seen below
+```rust
+use csv::Reader;
+use diff_priv::anonymization::microagg_anonymizer::MicroaggAnonymizer;
+use diff_priv::noise::laplace::laplace_noiser::LaplaceNoiser;
+use diff_priv::test::adult::Adult;
+use diff_priv::test::dummy_publisher::DummyPublisher;
+
+// we initialize our noiser that implements the `Noiser` trait
+let noiser = LaplaceNoiser::new(0.1, 3, 0.1);
+// we initialize a publisher that implements the `Publisher` trait
+let publisher = DummyPublisher::default();
+// we create the anonymizer with the desired parameters
+// k: 2 | k_max: 10 | c: 2 | l: 7 | diff_thres: 0.1 | delta: 10 | buff_size: 5
+let mut anonymizer: MicroaggAnonymizer<LaplaceNoiser, Adult, DummyPublisher> =
+    MicroaggAnonymizer::new(2, 10, 2, 7, 0.1, 10, 5, publisher, noiser);
+
+// load CSV file representing an Adult
+let mut file = Reader::from_path("datasets/Adult_1_numeric_only_class_50K.csv").unwrap();
+for line in file.deserialize() {
+    let row_result = line;
+    // when we call for `anonymizer()` the anonymizer will
+    // automatically publish to the given backend when the given
+    // privacy parameter conditions are met
+    match row_result {
+        Ok(row) => anonymizer.anonymize(row),
+        Err(e) => panic!("{}", e)
+    }
+ }
+
+// publish remaining data tuples to the given publisher
+// in this case a `DummyPublisher`
+anonymizer
+    .cluster_set
+    .into_iter()
+    .for_each(|(_, mut cluster)| {
+        cluster.publish_all(&mut anonymizer.publisher, &mut anonymizer.analysers)
+});
+```
+### Implementing `Anonymizable` trait to anonymize new data
 By implementing the `Anonymizable` trait on any type of datastructure, DiffPriv will know how to anonymize it.
 The following QIs types are implemented
 ```rust
-/// value, min_value, max_value, weight of attribute
+ /// value, min_value, max_value, weight of attribute
 pub type IntervalType = (
-QuasiIdentifierType,
-QuasiIdentifierType,
-QuasiIdentifierType,
-usize,
+    QuasiIdentifierType,
+    QuasiIdentifierType,
+    QuasiIdentifierType,
+    usize,
 );
 
 /// rank, max_rank, weight of attribute
@@ -42,8 +88,7 @@ pub type OrdinalType = (i32, i32, usize);
 /// value, max value, weight of attribute
 pub type NominalType = (i32, i32, usize);
 ```
-An example implementation can be seen below
-
+An example implementation of the `Anonymizable` trait can be seen below
 ```rust
 use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Serialize, Deserialize};
@@ -188,12 +233,23 @@ impl Anonymizable for Adult {
 }
 ```
 
+## The `Publisher` trait
+To publish an anonymized struct to a desired backend we use the `Publisher` trait.
+DiffPriv also support exporting to an [Apache Kafka topic](publishing::kafka_publisher::KafkaPublisher). This can be seen in `publishing` directory.
+An example publisher for CSVs can be seen here: [CsvPublisher](publishing::csv_publisher::CsvPublisher).
+To implement a custom publishing backend one can use the [Publisher](publishing::publisher::Publisher) trait.
 
-## Architecture
+## The `Noiser` trait
+DiffPriv support [Laplace noise](noise::laplace::laplace_noiser::LaplaceNoiser) for ε-differential privacy.
+The noiser supports 2 different kind of noise: one for [numerical values](noise::laplace::numerical_noiser::NumericalNoiser) and one for [categorical](noise::laplace::categorical_noiser::CategoricalNoiser).
+To implement a custom implementation of ε-differential privacy noise, one can use the [Noiser](noise::noiser::Noiser) trait.
+
+
+# Architecture
 The architecture of the DiffPriv framework can be seen below
 ![Alt text](midipsa_1.png?raw=true "Title")
 
-## Thesis related stuff in the repo
+# Thesis related stuff in the repo
 In my thesis is described tests using `knn-test.sh`. To run this you need Java 8.
 
 License:

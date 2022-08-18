@@ -14,8 +14,8 @@ use crate::data_manipulation::anonymizable::{
     Anonymizable, QuasiIdentifierTypes, SensitiveAttribute,
 };
 use crate::noise::laplace::laplace_noiser::LaplaceNoiser;
+use crate::publishing::csv_publisher::CsvPublisher;
 use crate::test::csv_exporter::CsvExporter;
-use crate::test::csv_publisher::CsvPublisher;
 use crate::test::environment::Environment;
 use crate::test::metrics::Metrics;
 

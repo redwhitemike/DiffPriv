@@ -1,3 +1,70 @@
+//! # DiffPriv
+//! DiffPriv is a differential privacy framework for real time data streaming written in Rust. Supporting k-anonymity,
+//! (c,l)-diversity and ε-differential privacy. The framework is based on the [Preserving Differential Privacy and Utility of Non-stationary Data Streams](https://ieeexplore.ieee.org/document/8637412) paper, with various improvements implemented.
+//!
+//! This library is the result of my master thesis: Differential privacy in large scale data streaming.
+//! It has been developer during an internship at [STRM Privacy](https://strmprivacy.io/)
+//!
+//! # Using the anonymizer
+//! An example of using the anonymizer can be seen below
+//! ```
+//! use csv::Reader;
+//! use diff_priv::anonymization::microagg_anonymizer::MicroaggAnonymizer;
+//! use diff_priv::noise::laplace::laplace_noiser::LaplaceNoiser;
+//! use diff_priv::test::adult::Adult;
+//! use diff_priv::test::dummy_publisher::DummyPublisher;
+//!
+//! // we initialize our noiser that implements the `Noiser` trait
+//! let noiser = LaplaceNoiser::new(0.1, 3, 0.1);
+//! // we initialize a publisher that implements the `Publisher` trait
+//! let publisher = DummyPublisher::default();
+//! // we create the anonymizer with the desired parameters
+//! // k: 2 | k_max: 10 | c: 2 | l: 7 | diff_thres: 0.1 | delta: 10 | buff_size: 5
+//! let mut anonymizer: MicroaggAnonymizer<LaplaceNoiser, Adult, DummyPublisher> =
+//!     MicroaggAnonymizer::new(2, 10, 2, 7, 0.1, 10, 5, publisher, noiser);
+//!
+//! // load CSV file representing an Adult
+//! let mut file = Reader::from_path("datasets/Adult_1_numeric_only_class_50K.csv").unwrap();
+//! for line in file.deserialize() {
+//!     let row_result = line;
+//!     // when we call for `anonymizer()` the anonymizer will
+//!     // automatically publish to the given backend when the given
+//!     // privacy parameter conditions are met
+//!     match row_result {
+//!         Ok(row) => anonymizer.anonymize(row),
+//!         Err(e) => panic!("{}", e)
+//!     }
+//!  }
+//!
+//! // publish remaining data tuples to the given publisher
+//! // in this case a `DummyPublisher`
+//! anonymizer
+//!     .cluster_set
+//!     .into_iter()
+//!     .for_each(|(_, mut cluster)| {
+//!         cluster.publish_all(&mut anonymizer.publisher, &mut anonymizer.analysers)
+//! });
+//! ```
+//! ## Implementing `Anonymizable` trait to anonymize new data
+//! By implementing the `Anonymizable` trait on any type of datastructure, DiffPriv will know how to anonymize it.
+//! The following QIs types are implemented
+//! ```rust
+//! # use diff_priv::data_manipulation::anonymizable::QuasiIdentifierType;
+//!  /// value, min_value, max_value, weight of attribute
+//! pub type IntervalType = (
+//!     QuasiIdentifierType,
+//!     QuasiIdentifierType,
+//!     QuasiIdentifierType,
+//!     usize,
+//! );
+//!
+//! /// rank, max_rank, weight of attribute
+//! pub type OrdinalType = (i32, i32, usize);
+//!
+//! /// value, max value, weight of attribute
+//! pub type NominalType = (i32, i32, usize);
+//! ```
+//! An example implementation of the `Anonymizable` trait can be seen below
 //! ```
 //! use std::time::{SystemTime, UNIX_EPOCH};
 //! use serde::{Serialize, Deserialize};
@@ -141,6 +208,17 @@
 //!     }
 //! }
 //! ```
+//!
+//! # The `Publisher` trait
+//! To publish an anonymized struct to a desired backend we use the `Publisher` trait.
+//! DiffPriv also support exporting to an [Apache Kafka topic](publishing::kafka_publisher::KafkaPublisher). This can be seen in `publishing` directory.
+//! An example publisher for CSVs can be seen here: [CsvPublisher](publishing::csv_publisher::CsvPublisher).
+//! To implement a custom publishing backend one can use the [Publisher](publishing::publisher::Publisher) trait.
+//!
+//! # The `Noiser` trait
+//! DiffPriv support [Laplace noise](noise::laplace::laplace_noiser::LaplaceNoiser) for ε-differential privacy.
+//! The noiser supports 2 different kind of noise: one for [numerical values](noise::laplace::numerical_noiser::NumericalNoiser) and one for [categorical](noise::laplace::categorical_noiser::CategoricalNoiser).
+//! To implement a custom implementation of ε-differential privacy noise, one can use the [Noiser](noise::noiser::Noiser) trait.
 
 #[macro_use]
 extern crate serde;

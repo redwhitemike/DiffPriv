@@ -7,6 +7,7 @@ edition = "2021"
 [[bin]]
 name = "diff-priv"
 path = "src/main.rs"
+doc = false
 
 [lib]
 name = "diff_priv"
