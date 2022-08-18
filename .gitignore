@@ -1,7 +1,6 @@
 exports/*.csv
 exports/*.json
 exported*.csv
-/app*.conf
 dfs.pickle
 moa-output/*
 *.ipynb
