@@ -2,7 +2,10 @@
 name = "diff-priv"
 version = "0.1.0"
 edition = "2021"
-
+authors = ["Maciek Mika maciek@strmprivacy.io"]
+description = "k-anonymity, (c,l)-diversity and ε-differential privacy framework"
+repository = "https://github.com/redwhitemike/DiffPriv"
+license = "MIT"
 
 [[bin]]
 name = "diff-priv"
