@@ -26,6 +26,19 @@ Inside the `application.conf` all the different privacy parameters can be edited
 At this moment for `buffer_size` we use `3*k` and for `k_max` we use `4*k`. This can be edited in the `environment.rs` and `tests.rs` file.
 Additional parameters can be easily added through the `config.rs` file by adding it as a struct attribute and then adding it to `application.conf`.
 
+
+| Parameter | Description                                                           |
+|-----------|-----------------------------------------------------------------------|
+| k         | The minimum k-anonymity level                                         |
+| k_max     | The maximum k-anonymity level a cluster can have before being deleted |
+| l         | The minimum l-diversity level                                         |
+| (c,l)     | The minimum (c,l)-diversity level                                     |
+| eps       | ε-differential privacy level                                          |
+| diff_thrs | The maximum distance the data tuple and the cluster centroid can have |
+| delta     | The maximum time in seconds a cluster can exist without the addition of new data tuples                        |
+| buff_size | The maximum amount of tuples the buffers W_curr and W_prev can contain                                         |
+| noise_thr | categorical noise level                                         |
+
 # Documentation
 {{readme}}
 
