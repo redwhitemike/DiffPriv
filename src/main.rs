@@ -1,3 +1,4 @@
+use diff_priv::test::tests::polars_test;
 use diff_priv::test::tests::start_tests;
 use std::env;
 
@@ -13,5 +14,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("conf_file = {}", conf_file);
     start_tests(&conf_file);
+
     Ok(())
 }

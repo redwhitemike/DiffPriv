@@ -6,6 +6,7 @@ use crate::test::environment::{Dataset, Datasets, Environment};
 
 use crate::config::Config;
 use csv::Reader;
+use polars::prelude::*;
 use serde::de::DeserializeOwned;
 
 /**
@@ -30,7 +31,7 @@ fn create_test<A: Anonymizable + DeserializeOwned>(env: Environment, dataset: Da
     match csv_importer.convert::<A>(env) {
         Ok(_) => {}
         Err(e) => {
-            println!("{}", e)
+            println!("{:?}", e)
         }
     }
 }

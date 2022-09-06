@@ -2,6 +2,7 @@ use std::fs::File;
 use std::time::{Instant, SystemTime};
 
 use csv::Reader;
+use polars::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use uuid::Uuid;
@@ -137,56 +138,23 @@ impl CsvImporter {
         Self { file_reader }
     }
 
-    pub fn convert<A: Anonymizable + DeserializeOwned>(
-        &mut self,
-        env: Environment,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let noiser = LaplaceNoiser::new(env.eps, env.k, env.noise_thr);
-        let dataset_name = format!(
-            "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}",
-            env.dataset.extract().export,
-            env.k,
-            env.k_max,
-            env.l,
-            env.c,
-            env.diff_thres,
-            env.eps,
-            env.delta,
-            env.buff_size,
-            env.noise_thr
-        );
-
-        let mut exporter = CsvExporter::new(format!("{}.csv", dataset_name), env.dataset);
-        let publisher = CsvPublisher::new(&mut exporter);
-        let mut microagg: MicroaggAnonymizer<LaplaceNoiser, A, CsvPublisher> =
-            MicroaggAnonymizer::new(
-                env.k,
-                env.k_max,
-                env.l,
-                env.c,
-                env.diff_thres,
-                env.delta,
-                env.buff_size,
-                publisher,
-                noiser,
-            );
-
-        println!("starting anonymization with k: {}| k_max:{}| l: {}| c: {}| eps: {}| diff_thres: {}, delta: {}| noise_thr: {}| buff_size: {}",
-                 env.k,
-                 env.k_max,
-                 env.l,
-                 env.c,
-                 env.eps,
-                 env.diff_thres,
-                 env.delta,
-                 env.noise_thr,
-                 env.k * 3
-        );
+    pub fn convert<A: Anonymizable + DeserializeOwned>(&mut self, env: Environment) -> Result<()> {
+        let (dataset_name, exporter, mut microagg) = Self::setup(&env);
         let duration = Instant::now();
+
+        let data_info = LazyCsvReader::new("datasets/datatypes_adult_1_class_50K.csv".into())
+            .has_header(true)
+            .finish()
+            .unwrap()
+            .collect()
+            .unwrap();
 
         for line in self.file_reader.deserialize() {
             let row: A = line?;
-            microagg.anonymize(row);
+            let df = JsonReader::new(row).finish().unwrap();
+            let new_df = df.vstack(&data_info).unwrap();
+            println!("{}", new_df);
+            assert!()
         }
 
         println!("cluster remaining: {}", microagg.cluster_set.len());
@@ -251,5 +219,56 @@ impl CsvImporter {
         )?;
         println!("-------------------");
         Ok(())
+    }
+
+    fn setup(
+        env: &Environment,
+    ) -> (
+        String,
+        CsvExporter,
+        MicroaggAnonymizer<LaplaceNoiser, A, CsvPublisher>,
+    ) {
+        let noiser = LaplaceNoiser::new(env.eps, env.k, env.noise_thr);
+        let dataset_name = format!(
+            "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}",
+            env.dataset.extract().export,
+            env.k,
+            env.k_max,
+            env.l,
+            env.c,
+            env.diff_thres,
+            env.eps,
+            env.delta,
+            env.buff_size,
+            env.noise_thr
+        );
+
+        let mut exporter = CsvExporter::new(format!("{}.csv", dataset_name), env.dataset);
+        let publisher = CsvPublisher::new(&mut exporter);
+        let mut microagg: MicroaggAnonymizer<LaplaceNoiser, A, CsvPublisher> =
+            MicroaggAnonymizer::new(
+                env.k,
+                env.k_max,
+                env.l,
+                env.c,
+                env.diff_thres,
+                env.delta,
+                env.buff_size,
+                publisher,
+                noiser,
+            );
+
+        println!("starting anonymization with k: {}| k_max:{}| l: {}| c: {}| eps: {}| diff_thres: {}, delta: {}| noise_thr: {}| buff_size: {}",
+                 env.k,
+                 env.k_max,
+                 env.l,
+                 env.c,
+                 env.eps,
+                 env.diff_thres,
+                 env.delta,
+                 env.noise_thr,
+                 env.k * 3
+        );
+        (dataset_name, exporter, microagg)
     }
 }
